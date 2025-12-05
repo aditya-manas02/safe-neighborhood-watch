@@ -4,7 +4,7 @@ import heroImage from "@/assets/hero-neighborhood.jpg";
 
 interface HeroProps {
   onReportClick: () => void;
-  onViewReportsClick: () => void; // NEW PROP
+  onViewReportsClick: () => void;
 }
 
 const Hero = ({ onReportClick, onViewReportsClick }: HeroProps) => {
@@ -12,8 +12,6 @@ const Hero = ({ onReportClick, onViewReportsClick }: HeroProps) => {
     <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 to-background py-20 md:py-32">
       <div className="container mx-auto px-4">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
-          
-          {/* Left Content */}
           <div className="space-y-8">
             <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
               <Shield className="h-4 w-4" />
@@ -28,11 +26,9 @@ const Hero = ({ onReportClick, onViewReportsClick }: HeroProps) => {
             </h1>
 
             <p className="text-lg text-muted-foreground max-w-xl">
-              Report incidents, stay alert, and work together to build a safer community. 
-              Real-time updates keep everyone informed and protected.
+              Report incidents, stay alert, and work together to build a safer community. Real-time updates keep everyone informed.
             </p>
 
-            {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
                 size="lg"
@@ -45,7 +41,7 @@ const Hero = ({ onReportClick, onViewReportsClick }: HeroProps) => {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={onViewReportsClick}   // <-- ADDED CLICK ACTION
+                onClick={onViewReportsClick}
                 className="text-base font-semibold"
               >
                 View Recent Reports
@@ -53,7 +49,6 @@ const Hero = ({ onReportClick, onViewReportsClick }: HeroProps) => {
             </div>
           </div>
 
-          {/* Right Image */}
           <div className="relative">
             <div className="aspect-video overflow-hidden rounded-2xl shadow-elevated">
               <img

@@ -43,125 +43,127 @@ const ReportForm = ({ onClose, onSubmit }: ReportFormProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 overflow-y-auto flex items-start justify-center p-4">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
 
-      <Card className="w-full max-w-2xl p-6 relative shadow-elevated max-h-[90vh] overflow-y-auto">
-        {/* CLOSE BUTTON */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-4 top-4"
-          onClick={onClose}
-        >
-          <X className="h-4 w-4" />
-        </Button>
+      {/* Scrollable modal body container */}
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl">
 
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Report an Incident</h2>
-            <p className="text-muted-foreground mt-1">
-              Help keep your community informed and safe
-            </p>
-          </div>
+        <Card className="relative p-6 shadow-elevated">
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* INCIDENT TYPE */}
-            <div className="space-y-2">
-              <Label htmlFor="type">Incident Type *</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => setFormData({ ...formData, type: value })}
-              >
-                <SelectTrigger id="type">
-                  <SelectValue placeholder="Select incident type" />
-                </SelectTrigger>
+          {/* Close Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-4 top-4"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" />
+          </Button>
 
-                <SelectContent>
-                  <SelectItem value="suspicious">Suspicious Activity</SelectItem>
-                  <SelectItem value="theft">Theft</SelectItem>
-                  <SelectItem value="vandalism">Vandalism</SelectItem>
-                  <SelectItem value="assault">Assault</SelectItem>
-                  <SelectItem value="noise">Noise Complaint</SelectItem>
-                  <SelectItem value="emergency">Emergency</SelectItem>
-                  <SelectItem value="road_hazard">Road Hazard</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* TITLE */}
-            <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                placeholder="Short title of the incident"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-              />
-            </div>
-
-            {/* LOCATION INPUT */}
-            <div className="space-y-2">
-              <Label htmlFor="location">Location (Text) *</Label>
-              <Input
-                id="location"
-                placeholder="Street address or landmark"
-                value={formData.location}
-                onChange={(e) =>
-                  setFormData({ ...formData, location: e.target.value })
-                }
-              />
-            </div>
-
-            {/* MAP PICKER */}
-            <div className="space-y-2">
-              <Label>Select Exact Location on Map (Optional)</Label>
-
-              <MapPicker
-                onSelectLocation={(coords) =>
-                  setFormData({ ...formData, coordinates: coords })
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description *</Label>
-              <Textarea
-                id="description"
-                placeholder="Provide detailed information"
-                rows={4}
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-              />
-            </div>
-
-            {/* Warning Box */}
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
-              <AlertCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-foreground">
-                For emergencies, call 911 immediately. This form is for community awareness only.
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">Report an Incident</h2>
+              <p className="text-muted-foreground mt-1">
+                Help keep your community informed and safe
               </p>
             </div>
 
-            {/* BUTTONS */}
-            <div className="flex gap-3 pt-2">
-              <Button type="submit" className="flex-1">
-                Submit Report
-              </Button>
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </div>
-      </Card>
+            <form onSubmit={handleSubmit} className="space-y-4">
+
+              {/* INCIDENT TYPE */}
+              <div className="space-y-2">
+                <Label htmlFor="type">Incident Type *</Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value) => setFormData({ ...formData, type: value })}
+                >
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder="Select incident type" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="suspicious">Suspicious Activity</SelectItem>
+                    <SelectItem value="theft">Theft</SelectItem>
+                    <SelectItem value="vandalism">Vandalism</SelectItem>
+                    <SelectItem value="assault">Assault</SelectItem>
+                    <SelectItem value="noise">Noise Complaint</SelectItem>
+                    <SelectItem value="emergency">Emergency</SelectItem>
+                    <SelectItem value="road_hazard">Road Hazard</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* TITLE */}
+              <div className="space-y-2">
+                <Label htmlFor="title">Title *</Label>
+                <Input
+                  id="title"
+                  placeholder="Short title of the incident"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                />
+              </div>
+
+              {/* LOCATION */}
+              <div className="space-y-2">
+                <Label htmlFor="location">Location (Text) *</Label>
+                <Input
+                  id="location"
+                  placeholder="Street address or landmark"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                />
+              </div>
+
+              {/* MAP PICKER */}
+              <div className="space-y-2">
+                <Label>Select Exact Location on Map (Optional)</Label>
+                <MapPicker
+                  onSelectLocation={(coords) =>
+                    setFormData({ ...formData, coordinates: coords })
+                  }
+                />
+              </div>
+
+              {/* DESCRIPTION */}
+              <div className="space-y-2">
+                <Label htmlFor="description">Description *</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Provide detailed information"
+                  rows={4}
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Warning Box */}
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
+                <AlertCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-foreground">
+                  For emergencies, call 911 immediately. This form is for community awareness only.
+                </p>
+              </div>
+
+              {/* FORM BUTTONS */}
+              <div className="flex gap-3 pt-2">
+                <Button type="submit" className="flex-1">
+                  Submit Report
+                </Button>
+                <Button type="button" variant="outline" onClick={onClose}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </div>
+
+        </Card>
+      </div>
     </div>
   );
 };
 
 export default ReportForm;
-  
