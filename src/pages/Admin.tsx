@@ -1,9 +1,7 @@
 // src/pages/Admin.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Button
-} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -41,7 +39,7 @@ type IncidentRow = {
   updated_at: string | null;
 };
 
-const STATUS_TABS: { key: string; label: string }[] = [
+const STATUS_TABS = [
   { key: "all", label: "All" },
   { key: "pending", label: "Pending" },
   { key: "approved", label: "Approved" },
@@ -53,96 +51,75 @@ const typeColors: Record<string, string> = {
   vandalism: "bg-amber-500 text-white",
   suspicious: "bg-yellow-500 text-black",
   assault: "bg-red-700 text-white",
-  noise: "bg-violet-600 text-white",
+  noise: "bg-purple-600 text-white",
   emergency: "bg-red-600 text-white",
-  road_hazard: "bg-sky-600 text-white",
+  road_hazard: "bg-blue-600 text-white",
   other: "bg-muted text-muted-foreground",
 };
 
 export default function Admin() {
   const navigate = useNavigate();
   const { user, isAdmin, isLoading } = useAuth();
+
   const [incidents, setIncidents] = useState<IncidentRow[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [search, setSearch] = useState<string>("");
-  const [page, setPage] = useState<number>(1);
-  const [perPage] = useState<number>(8);
-  const [totalCount, setTotalCount] = useState<number>(0);
-  const [sortDesc, setSortDesc] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
+
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
+
+  const [page, setPage] = useState(1);
+  const perPage = 8;
+
+  const [totalCount, setTotalCount] = useState(0);
+  const [sortDesc, setSortDesc] = useState(true);
 
   // Protect route
   useEffect(() => {
-    if (!isLoading && (!user || !isAdmin)) {
-      navigate("/");
-    }
+    if (!isLoading && (!user || !isAdmin)) navigate("/");
   }, [user, isAdmin, isLoading, navigate]);
 
+  // Fetch incidents
   useEffect(() => {
-    if (isAdmin) {
-      fetchIncidents();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin, statusFilter, page, perPage, search, sortDesc]);
+    if (isAdmin) fetchIncidents();
+  }, [isAdmin, page, perPage, search, statusFilter, sortDesc]);
 
   async function fetchIncidents() {
     setLoading(true);
+
     try {
       const query = supabase
-        .from<IncidentRow>("incidents")
+        .from("incidents")
         .select("*", { count: "exact" })
         .order("created_at", { ascending: !sortDesc })
         .range((page - 1) * perPage, page * perPage - 1);
 
-      // filter by status
       if (statusFilter !== "all") query.eq("status", statusFilter);
 
-      // basic search across title/description/location
       if (search.trim()) {
-        // use ilike for case-insensitive partial matching
-        const q = `%${search.trim()}%`;
-        query.or(`title.ilike.${q},description.ilike.${q},location.ilike.${q}`);
+        const text = `%${search.trim()}%`;
+        query.or(`title.ilike.${text},description.ilike.${text},location.ilike.${text}`);
       }
 
       const { data, count, error } = await query;
+
       if (error) {
-        console.error("fetchIncidents error:", error);
+        console.error(error);
         toast({
           title: "Error",
           description: "Failed to fetch incidents",
           variant: "destructive",
         });
       } else {
-        setIncidents(data ?? []);
-        setTotalCount(count ?? 0);
+        setIncidents(data || []);
+        setTotalCount(count || 0);
       }
-    } catch (err) {
-      console.error(err);
-      toast({
-        title: "Error",
-        description: "Unexpected error fetching incidents",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
   }
 
-  const stats = useMemo(() => {
-    const pending = incidents.filter((i) => i.status === "pending").length;
-    const approved = incidents.filter((i) => i.status === "approved").length;
-    const rejected = incidents.filter((i) => i.status === "rejected").length;
-    // totalCount is server-side total for the current filter; for overview we could fetch global stats separately.
-    return { pending, approved, rejected, total: totalCount };
-  }, [incidents, totalCount]);
-
-  // Approve or Reject
   async function updateIncidentStatus(id: string, newStatus: "approved" | "rejected") {
-    const confirmMsg =
-      newStatus === "approved"
-        ? "Approve this incident?"
-        : "Reject this incident?";
-    if (!confirm(confirmMsg)) return;
+    if (!confirm(`Confirm ${newStatus}?`)) return;
 
     const { error } = await supabase
       .from("incidents")
@@ -156,19 +133,16 @@ export default function Admin() {
         variant: "destructive",
       });
     } else {
-      toast({
-        title: "Success",
-        description: `Incident ${newStatus}`,
-      });
+      toast({ title: "Success", description: `Incident ${newStatus}` });
       fetchIncidents();
     }
   }
 
-  // Delete incident
   async function deleteIncident(id: string) {
-    if (!confirm("Permanently delete this incident? This cannot be undone.")) return;
+    if (!confirm("Delete this incident permanently?")) return;
 
     const { error } = await supabase.from("incidents").delete().eq("id", id);
+
     if (error) {
       toast({
         title: "Error",
@@ -176,127 +150,67 @@ export default function Admin() {
         variant: "destructive",
       });
     } else {
-      toast({
-        title: "Deleted",
-        description: "Incident removed",
-      });
-      // if we deleted the only item on the last page, go back a page
+      toast({ title: "Deleted", description: "Incident removed." });
+
       if (incidents.length === 1 && page > 1) setPage(page - 1);
       else fetchIncidents();
     }
   }
 
-  // Bulk delete example (admins only)
-  async function bulkDeleteSelected(ids: string[]) {
-    if (ids.length === 0) return;
-    if (!confirm(`Delete ${ids.length} incidents permanently?`)) return;
+  const stats = useMemo(() => {
+    return {
+      pending: incidents.filter(i => i.status === "pending").length,
+      approved: incidents.filter(i => i.status === "approved").length,
+      rejected: incidents.filter(i => i.status === "rejected").length,
+      total: totalCount
+    };
+  }, [incidents, totalCount]);
 
-    const { error } = await supabase.from("incidents").delete().in("id", ids);
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Bulk delete failed",
-        variant: "destructive",
-      });
-    } else {
-      toast({ title: "Deleted", description: `Removed ${ids.length} incidents` });
-      fetchIncidents();
-    }
-  }
-
-  const totalPages = Math.max(1, Math.ceil((totalCount || 0) / perPage));
+  const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
 
   return (
     <div className="min-h-screen flex bg-background">
+
       {/* SIDEBAR */}
       <aside className="w-72 hidden md:flex flex-col border-r border-border bg-card p-4">
         <div className="flex items-center gap-3 mb-6">
           <Shield className="h-8 w-8 text-primary" />
           <div>
-            <div className="font-bold text-lg text-foreground">SafetyWatch</div>
+            <div className="font-bold text-lg">SafetyWatch</div>
             <div className="text-sm text-muted-foreground">Admin Dashboard</div>
           </div>
         </div>
 
         <nav className="flex-1">
           <ul className="space-y-1">
-            <li>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3"
-                onClick={() => {
-                  setStatusFilter("all");
-                }}
-              >
-                <List className="h-4 w-4" /> All Reports
-              </Button>
-            </li>
-            <li>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3"
-                onClick={() => {
-                  setStatusFilter("pending");
-                }}
-              >
-                <Clock className="h-4 w-4" /> Pending
-              </Button>
-            </li>
-            <li>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3"
-                onClick={() => {
-                  setStatusFilter("approved");
-                }}
-              >
-                <Check className="h-4 w-4" /> Approved
-              </Button>
-            </li>
-            <li>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3"
-                onClick={() => {
-                  setStatusFilter("rejected");
-                }}
-              >
-                <X className="h-4 w-4" /> Rejected
-              </Button>
-            </li>
+            {STATUS_TABS.map(tab => (
+              <li key={tab.key}>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3"
+                  onClick={() => {
+                    setStatusFilter(tab.key);
+                    setPage(1);
+                  }}
+                >
+                  {tab.key === "all" && <List className="h-4 w-4" />}
+                  {tab.key === "pending" && <Clock className="h-4 w-4" />}
+                  {tab.key === "approved" && <Check className="h-4 w-4" />}
+                  {tab.key === "rejected" && <X className="h-4 w-4" />}
+                  {tab.label}
+                </Button>
+              </li>
+            ))}
           </ul>
         </nav>
 
-        <div className="mt-6">
-          <Card>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="text-xs text-muted-foreground">Overview</div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm text-muted-foreground">Pending</div>
-                    <div className="text-lg font-semibold text-amber-500">{stats.pending}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Approved</div>
-                    <div className="text-lg font-semibold text-green-500">{stats.approved}</div>
-                  </div>
-                </div>
-                <div className="mt-3 text-sm text-muted-foreground">
-                  Total matching: <span className="font-medium text-foreground">{stats.total}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         <div className="mt-4 text-xs text-muted-foreground">
           <div>Signed in as</div>
-          <div className="font-medium text-foreground truncate">{user?.email}</div>
+          <div className="font-medium truncate">{user?.email}</div>
         </div>
       </aside>
 
-      {/* MAIN */}
+      {/* MAIN CONTENT */}
       <main className="flex-1 p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -308,65 +222,66 @@ export default function Admin() {
 
           <div className="flex items-center gap-3">
             <Input
-              placeholder="Search title, description, location..."
+              placeholder="Search incidents..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
               className="max-w-md"
-              leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
             />
-            <Button onClick={() => { setSortDesc(!sortDesc); }}>
+
+            <Button onClick={() => setSortDesc(!sortDesc)}>
               {sortDesc ? "Newest" : "Oldest"}
             </Button>
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Filters Tabs */}
         <div className="flex items-center gap-2 mb-4">
-          {STATUS_TABS.map((t) => (
+          {STATUS_TABS.map(tab => (
             <button
-              key={t.key}
-              onClick={() => { setStatusFilter(t.key); setPage(1); }}
+              key={tab.key}
+              onClick={() => {
+                setStatusFilter(tab.key);
+                setPage(1);
+              }}
               className={`px-3 py-1 rounded-full text-sm font-medium ${
-                statusFilter === t.key
+                statusFilter === tab.key
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground"
               }`}
             >
-              {t.label}
-              {t.key !== "all" && (
-                <span className="ml-2 text-xs text-muted-foreground">
-                  {/* show count for visible incidents in page (not global) */}
-                  ({incidents.filter((i) => (t.key === "all" ? true : i.status === t.key)).length})
-                </span>
-              )}
+              {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Content */}
+        {/* INCIDENT LIST */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: list */}
+
+          {/* LEFT LIST */}
           <section className="lg:col-span-2 space-y-4">
+
             {loading ? (
-              <div className="p-8 rounded-lg border border-border text-center">
+              <div className="p-10 text-center border rounded-lg">
                 Loading incidents...
               </div>
             ) : incidents.length === 0 ? (
-              <div className="p-8 rounded-lg border border-border text-center">
+              <div className="p-10 text-center border rounded-lg">
                 No incidents found.
               </div>
             ) : (
               incidents.map((inc) => (
                 <Card key={inc.id}>
-                  <CardContent className="flex flex-col md:flex-row md:items-start gap-4">
+                  <CardContent className="flex flex-col md:flex-row md:items-start gap-4 p-4">
+
                     <div className="w-full md:flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <Badge className={typeColors[inc.type] || typeColors.other}>
                           {inc.type.replace("_", " ")}
                         </Badge>
+
                         <Badge
                           variant={
                             inc.status === "approved"
@@ -378,22 +293,27 @@ export default function Admin() {
                         >
                           {inc.status}
                         </Badge>
-                        <div className="ml-auto text-xs text-muted-foreground">
-                          {inc.created_at ? format(new Date(inc.created_at), "PPp") : "—"}
-                        </div>
+
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {inc.created_at && format(new Date(inc.created_at), "PPp")}
+                        </span>
                       </div>
 
-                      <h3 className="text-lg font-semibold text-foreground">{inc.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{inc.description}</p>
+                      <h3 className="text-lg font-semibold">{inc.title}</h3>
+                      <p className="text-sm text-muted-foreground">{inc.description}</p>
                       <div className="text-xs text-muted-foreground mt-2">{inc.location}</div>
                     </div>
 
-                    <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                    <div className="flex flex-col gap-2 items-end">
                       {inc.status === "pending" && (
                         <>
-                          <Button size="sm" onClick={() => updateIncidentStatus(inc.id, "approved")}>
+                          <Button
+                            size="sm"
+                            onClick={() => updateIncidentStatus(inc.id, "approved")}
+                          >
                             <Check className="h-4 w-4 mr-1" /> Approve
                           </Button>
+
                           <Button
                             size="sm"
                             variant="destructive"
@@ -405,15 +325,22 @@ export default function Admin() {
                       )}
 
                       {inc.status === "approved" && (
-                        <Button size="sm" variant="outline" onClick={() => deleteIncident(inc.id)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => deleteIncident(inc.id)}
+                        >
                           <Trash2 className="h-4 w-4 mr-1" /> Delete
                         </Button>
                       )}
 
-                      <Button size="sm" variant="ghost" onClick={() => {
-                        // open incident detail in new tab (if you have a detail route)
-                        window.open(`${window.location.origin}/incidents/${inc.id}`, "_blank");
-                      }}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          window.open(`/incidents/${inc.id}`, "_blank")
+                        }
+                      >
                         View
                       </Button>
                     </div>
@@ -424,43 +351,55 @@ export default function Admin() {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                Showing page {page} of {totalPages} — {totalCount} results
-              </div>
+              <span className="text-sm text-muted-foreground">
+                Page {page} of {totalPages} — {totalCount} results
+              </span>
 
-              <div className="flex items-center gap-2">
-                <Button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+              <div className="flex gap-2">
+                <Button disabled={page <= 1} onClick={() => setPage(page - 1)}>
                   Prev
                 </Button>
-                <Button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                <Button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
                   Next
                 </Button>
               </div>
             </div>
           </section>
 
-          {/* Right: quick filters / stats / tools */}
+          {/* RIGHT SIDEBAR PANEL */}
           <aside className="space-y-4">
+
             <Card>
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex flex-col gap-2">
-                  <Button onClick={() => { setStatusFilter("pending"); setPage(1); }}>
-                    <Clock className="mr-2 h-4 w-4" /> Show Pending
-                  </Button>
-                  <Button onClick={() => { setStatusFilter("approved"); setPage(1); }}>
-                    <Check className="mr-2 h-4 w-4" /> Show Approved
-                  </Button>
-                  <Button variant="destructive" onClick={() => {
-                    if (!confirm("Delete ALL approved incidents on this page?")) return;
+              <CardContent className="space-y-2">
+                <Button onClick={() => setStatusFilter("pending")}>
+                  <Clock className="h-4 w-4 mr-2" /> Show Pending
+                </Button>
+
+                <Button onClick={() => setStatusFilter("approved")}>
+                  <Check className="h-4 w-4 mr-2" /> Show Approved
+                </Button>
+
+                <Button
+                  variant="destructive"
+                  onClick={() => {
                     const ids = incidents.filter(i => i.status === "approved").map(i => i.id);
-                    bulkDeleteSelected(ids);
-                  }}>
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete Approved (page)
-                  </Button>
-                </div>
+                    if (ids.length === 0) return;
+                    if (!confirm(`Delete ${ids.length} approved incidents?`)) return;
+
+                    supabase.from("incidents")
+                      .delete()
+                      .in("id", ids)
+                      .then(() => {
+                        toast({ title: "Deleted", description: "Approved incidents removed" });
+                        fetchIncidents();
+                      });
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" /> Delete Approved (Page)
+                </Button>
               </CardContent>
             </Card>
 
@@ -468,24 +407,25 @@ export default function Admin() {
               <CardHeader>
                 <CardTitle>Stats</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-sm">
-                    <div className="text-muted-foreground">Pending</div>
-                    <div className="text-lg font-semibold text-amber-500">{stats.pending}</div>
-                  </div>
-                  <div className="text-sm">
-                    <div className="text-muted-foreground">Approved</div>
-                    <div className="text-lg font-semibold text-green-500">{stats.approved}</div>
-                  </div>
-                  <div className="text-sm">
-                    <div className="text-muted-foreground">Rejected</div>
-                    <div className="text-lg font-semibold text-destructive">{stats.rejected}</div>
-                  </div>
-                  <div className="text-sm">
-                    <div className="text-muted-foreground">Page</div>
-                    <div className="text-lg font-semibold">{page}/{totalPages}</div>
-                  </div>
+              <CardContent className="grid grid-cols-2 gap-3">
+                <div>
+                  <div className="text-muted-foreground text-sm">Pending</div>
+                  <div className="text-lg font-semibold text-amber-500">{stats.pending}</div>
+                </div>
+
+                <div>
+                  <div className="text-muted-foreground text-sm">Approved</div>
+                  <div className="text-lg font-semibold text-green-500">{stats.approved}</div>
+                </div>
+
+                <div>
+                  <div className="text-muted-foreground text-sm">Rejected</div>
+                  <div className="text-lg font-semibold text-destructive">{stats.rejected}</div>
+                </div>
+
+                <div>
+                  <div className="text-muted-foreground text-sm">Pages</div>
+                  <div className="text-lg font-semibold">{page}/{totalPages}</div>
                 </div>
               </CardContent>
             </Card>
@@ -494,17 +434,16 @@ export default function Admin() {
               <CardHeader>
                 <CardTitle>Admin Tools</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex flex-col gap-2">
-                  <Button variant="ghost" onClick={() => navigate("/users")}>
-                    <Users className="mr-2 h-4 w-4" /> Manage Users
-                  </Button>
-                  <Button variant="ghost" onClick={() => navigate("/settings")}>
-                    <Settings className="mr-2 h-4 w-4" /> Settings
-                  </Button>
-                </div>
+              <CardContent className="space-y-2">
+                <Button variant="ghost">
+                  <Users className="h-4 w-4 mr-2" /> Manage Users
+                </Button>
+                <Button variant="ghost">
+                  <Settings className="h-4 w-4 mr-2" /> Settings
+                </Button>
               </CardContent>
             </Card>
+
           </aside>
         </div>
       </main>
