@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Check, X, ArrowLeft, Clock } from "lucide-react";
+import { Shield, Check, X, ArrowLeft, Clock, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -45,6 +45,7 @@ const Admin = () => {
     }
   }, [isAdmin]);
 
+  // Fetch all incidents
   const fetchPendingIncidents = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -64,6 +65,7 @@ const Admin = () => {
     setLoading(false);
   };
 
+  // Approve / Reject
   const updateIncidentStatus = async (id: string, status: "approved" | "rejected") => {
     const { error } = await supabase
       .from("incidents")
@@ -85,6 +87,30 @@ const Admin = () => {
     }
   };
 
+  // DELETE approved incident
+  const deleteIncident = async (id: string) => {
+    const confirmed = confirm("Are you sure you want to permanently delete this incident?");
+    if (!confirmed) return;
+
+    const { error } = await supabase.from("incidents").delete().eq("id", id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete incident",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Success",
+      description: "Incident deleted successfully",
+    });
+
+    fetchPendingIncidents();
+  };
+
   if (isLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -93,9 +119,7 @@ const Admin = () => {
     );
   }
 
-  if (!isAdmin) {
-    return null;
-  }
+  if (!isAdmin) return null;
 
   const pendingCount = incidents.filter(i => i.status === "pending").length;
   const approvedCount = incidents.filter(i => i.status === "approved").length;
@@ -190,29 +214,45 @@ const Admin = () => {
                           {incident.status}
                         </Badge>
                       </div>
+
                       <h3 className="font-semibold text-foreground">{incident.title}</h3>
                       <p className="text-sm text-muted-foreground mt-1">{incident.description}</p>
                       <p className="text-xs text-muted-foreground mt-2">
                         {incident.location} • {format(new Date(incident.created_at), "PPp")}
                       </p>
                     </div>
-                    {incident.status === "pending" && (
-                      <div className="flex gap-2">
+
+                    {/* Buttons */}
+                    <div className="flex gap-2">
+                      {incident.status === "pending" && (
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => updateIncidentStatus(incident.id, "approved")}
+                          >
+                            <Check className="h-4 w-4 mr-1" /> Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => updateIncidentStatus(incident.id, "rejected")}
+                          >
+                            <X className="h-4 w-4 mr-1" /> Reject
+                          </Button>
+                        </>
+                      )}
+
+                      {/* DELETE BUTTON only for approved incidents */}
+                      {incident.status === "approved" && (
                         <Button
                           size="sm"
-                          onClick={() => updateIncidentStatus(incident.id, "approved")}
+                          variant="outline"
+                          onClick={() => deleteIncident(incident.id)}
                         >
-                          <Check className="h-4 w-4 mr-1" /> Approve
+                          <Trash2 className="h-4 w-4 mr-1" /> Delete
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => updateIncidentStatus(incident.id, "rejected")}
-                        >
-                          <X className="h-4 w-4 mr-1" /> Reject
-                        </Button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
