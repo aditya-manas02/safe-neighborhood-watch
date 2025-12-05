@@ -102,7 +102,16 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       incident_status: "pending" | "approved" | "rejected"
-      incident_type: "theft" | "vandalism" | "suspicious" | "assault" | "other"
+      incident_type:
+  | "suspicious"
+  | "theft"
+  | "vandalism"
+  | "assault"
+  | "noise"
+  | "emergency"
+  | "road_hazard"
+  | "other";
+
     }
     CompositeTypes: {
       [_ in never]: never
@@ -232,7 +241,17 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       incident_status: ["pending", "approved", "rejected"],
-      incident_type: ["theft", "vandalism", "suspicious", "assault", "other"],
+      incident_type: [
+  "suspicious",
+  "theft",
+  "vandalism",
+  "assault",
+  "noise",
+  "emergency",
+  "road_hazard",
+  "other",
+],
+
     },
   },
 } as const

@@ -20,12 +20,16 @@ interface PendingIncident {
 }
 
 const typeColors: Record<string, string> = {
-  theft: "bg-destructive text-destructive-foreground",
-  vandalism: "bg-amber-500 text-white",
   suspicious: "bg-yellow-500 text-black",
+  theft: "bg-destructive text-destructive-foreground",
+  vandalism: "bg-amber-600 text-white",
   assault: "bg-red-700 text-white",
+  noise: "bg-blue-500 text-white",
+  emergency: "bg-red-600 text-white",
+  road_hazard: "bg-orange-500 text-white",
   other: "bg-muted text-muted-foreground",
 };
+
 
 const Admin = () => {
   const navigate = useNavigate();
