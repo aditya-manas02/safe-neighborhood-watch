@@ -116,7 +116,7 @@ const ReportForm = ({ onClose, onSubmit }: ReportFormProps) => {
             <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
               <AlertCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
               <p className="text-sm text-foreground">
-                For emergencies, please call 911 immediately. This form is for community awareness only.
+                For emergencies, please call 100 immediately. This form is for community awareness only.
               </p>
             </div>
 
