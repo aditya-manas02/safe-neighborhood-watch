@@ -43,8 +43,9 @@ const ReportForm = ({ onClose, onSubmit }: ReportFormProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl p-6 relative shadow-elevated">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 overflow-y-auto flex items-start justify-center p-4">
+
+      <Card className="w-full max-w-2xl p-6 relative shadow-elevated max-h-[90vh] overflow-y-auto">
         {/* CLOSE BUTTON */}
         <Button
           variant="ghost"
