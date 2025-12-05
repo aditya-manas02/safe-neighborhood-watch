@@ -71,14 +71,13 @@ const ReportForm = ({ onClose, onSubmit }: ReportFormProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="suspicious">Suspicious Activity</SelectItem>
-<SelectItem value="theft">Theft</SelectItem>
-<SelectItem value="vandalism">Vandalism</SelectItem>
-<SelectItem value="assault">Assault</SelectItem>
-<SelectItem value="noise">Noise Complaint</SelectItem>
-<SelectItem value="emergency">Emergency</SelectItem>
-<SelectItem value="road_hazard">Road Hazard</SelectItem>
-<SelectItem value="other">Other</SelectItem>
-    
+                  <SelectItem value="theft">Theft</SelectItem>
+                  <SelectItem value="vandalism">Vandalism</SelectItem>
+                  <SelectItem value="assault">Assault</SelectItem>
+                  <SelectItem value="noise">Noise Complaint</SelectItem>
+                  <SelectItem value="emergency">Emergency</SelectItem>
+                  <SelectItem value="road_hazard">Road Hazard</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select> 
             </div>

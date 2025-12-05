@@ -26,7 +26,7 @@ const typeColors: Record<string, string> = {
   assault: "bg-red-700 text-white",
   noise: "bg-blue-500 text-white",
   emergency: "bg-red-600 text-white",
-  road_hazard: "bg-orange-500 text-white",
+  road_hazard: "bg-orange-600 text-white",
   other: "bg-muted text-muted-foreground",
 };
 

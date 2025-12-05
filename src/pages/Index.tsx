@@ -63,7 +63,16 @@ const Index = () => {
 
     const { error } = await supabase.from("incidents").insert({
       user_id: user.id,
-      type: report.type as "theft" | "vandalism" | "suspicious" | "assault" | "other",
+      type: report.type as
+  | "suspicious"
+  | "theft"
+  | "vandalism"
+  | "assault"
+  | "noise"
+  | "emergency"
+  | "road_hazard"
+  | "other",
+
       title: report.title,
       description: report.description,
       location: report.location,
