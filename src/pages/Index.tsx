@@ -16,6 +16,14 @@ const Index = () => {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loadingIncidents, setLoadingIncidents] = useState(true);
 
+  // Add scroll reference
+  const scrollToReports = () => {
+    const section = document.getElementById("recent-reports-section");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   useEffect(() => {
     fetchIncidents();
   }, []);
@@ -64,15 +72,14 @@ const Index = () => {
     const { error } = await supabase.from("incidents").insert({
       user_id: user.id,
       type: report.type as
-  | "suspicious"
-  | "theft"
-  | "vandalism"
-  | "assault"
-  | "noise"
-  | "emergency"
-  | "road_hazard"
-  | "other",
-
+        | "suspicious"
+        | "theft"
+        | "vandalism"
+        | "assault"
+        | "noise"
+        | "emergency"
+        | "road_hazard"
+        | "other",
       title: report.title,
       description: report.description,
       location: report.location,
@@ -110,6 +117,7 @@ const Index = () => {
               <Shield className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold text-foreground">SafetyWatch</span>
             </div>
+
             <div className="flex items-center gap-2">
               {isAdmin && (
                 <Button variant="outline" onClick={() => navigate("/admin")}>
@@ -117,6 +125,7 @@ const Index = () => {
                   Admin
                 </Button>
               )}
+
               {user ? (
                 <>
                   <Button onClick={() => setShowReportForm(true)}>
@@ -140,10 +149,13 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <Hero onReportClick={() => user ? setShowReportForm(true) : navigate("/auth")} />
+      <Hero
+        onReportClick={() => (user ? setShowReportForm(true) : navigate("/auth"))}
+        onViewReportsClick={scrollToReports} // <-- pass scrolling function
+      />
 
-      {/* Recent Incidents */}
-      <section className="py-16 md:py-24">
+      {/* Recent Incidents Section */}
+      <section id="recent-reports-section" className="py-16 md:py-24">
         <div className="container mx-auto px-4">
           <div className="mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-3">Recent Reports</h2>
