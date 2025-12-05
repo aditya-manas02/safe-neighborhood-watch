@@ -1,60 +1,67 @@
 import { useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+
+// Fix default icon issue in Leaflet
+const defaultIcon = L.icon({
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
 
 interface MapPickerProps {
   onSelectLocation: (coords: { lat: number; lng: number }) => void;
 }
 
-// Fix default marker icons for Leaflet
-const markerIcon = L.icon({
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
-
-const LocationSelector = ({ setPosition }: { setPosition: any }) => {
+// Component that listens for clicks on the map
+const LocationMarker = ({
+  marker,
+  setMarker,
+  onSelectLocation,
+}: {
+  marker: { lat: number; lng: number } | null;
+  setMarker: (c: { lat: number; lng: number }) => void;
+  onSelectLocation: (coords: { lat: number; lng: number }) => void;
+}) => {
   useMapEvents({
     click(e) {
-      setPosition(e.latlng);
+      const coords = { lat: e.latlng.lat, lng: e.latlng.lng };
+      setMarker(coords);
+      onSelectLocation(coords);
     },
   });
-  return null;
+
+  return marker ? (
+    <Marker position={[marker.lat, marker.lng]} icon={defaultIcon} />
+  ) : null;
 };
 
-const MapPicker = ({ onSelectLocation }: MapPickerProps) => {
-  const [position, setPosition] = useState<{ lat: number; lng: number } | null>(
+export default function MapPicker({ onSelectLocation }: MapPickerProps) {
+  const [marker, setMarker] = useState<{ lat: number; lng: number } | null>(
     null
   );
 
-  const handlePosition = (pos: any) => {
-    setPosition(pos);
-    onSelectLocation(pos);
-  };
-
   return (
-    <div className="w-full h-64 rounded-lg overflow-hidden border">
+    <div className="w-full h-64 rounded-xl overflow-hidden border border-border">
       <MapContainer
-        center={{ lat: 28.6139, lng: 77.209 }}
-        zoom={12}
+        center={{ lat: 20.5937, lng: 78.9629 }} // India center
+        zoom={5}
         scrollWheelZoom={true}
-        style={{ width: "100%", height: "100%" }}
+        className="h-full w-full"
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution="© OpenStreetMap contributors"
+          attribution="&copy; OpenStreetMap contributors"
         />
 
-        <LocationSelector setPosition={handlePosition} />
-
-        {position && <Marker position={position} icon={markerIcon} />}
+        <LocationMarker
+          marker={marker}
+          setMarker={setMarker}
+          onSelectLocation={onSelectLocation}
+        />
       </MapContainer>
     </div>
   );
-};
-
-export default MapPicker;
+}
