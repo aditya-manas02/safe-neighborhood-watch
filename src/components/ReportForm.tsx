@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card } from "@/components/ui/card";
 import { AlertCircle, X } from "lucide-react";
 import { toast } from "sonner";
+import MapPicker from "./MapPicker";
 
 interface ReportFormProps {
   onClose: () => void;
@@ -15,6 +16,7 @@ interface ReportFormProps {
     title: string;
     description: string;
     location: string;
+    coordinates?: { lat: number; lng: number };
   }) => void;
 }
 
@@ -24,11 +26,12 @@ const ReportForm = ({ onClose, onSubmit }: ReportFormProps) => {
     title: "",
     description: "",
     location: "",
+    coordinates: undefined as undefined | { lat: number; lng: number },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.type || !formData.title || !formData.description || !formData.location) {
       toast.error("Please fill in all fields");
       return;
@@ -42,6 +45,7 @@ const ReportForm = ({ onClose, onSubmit }: ReportFormProps) => {
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl p-6 relative shadow-elevated">
+        {/* CLOSE BUTTON */}
         <Button
           variant="ghost"
           size="icon"
@@ -60,15 +64,17 @@ const ReportForm = ({ onClose, onSubmit }: ReportFormProps) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* INCIDENT TYPE */}
             <div className="space-y-2">
               <Label htmlFor="type">Incident Type *</Label>
-              <Select 
-                value={formData.type} 
+              <Select
+                value={formData.type}
                 onValueChange={(value) => setFormData({ ...formData, type: value })}
               >
                 <SelectTrigger id="type">
                   <SelectValue placeholder="Select incident type" />
                 </SelectTrigger>
+
                 <SelectContent>
                   <SelectItem value="suspicious">Suspicious Activity</SelectItem>
                   <SelectItem value="theft">Theft</SelectItem>
@@ -79,26 +85,43 @@ const ReportForm = ({ onClose, onSubmit }: ReportFormProps) => {
                   <SelectItem value="road_hazard">Road Hazard</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
-              </Select> 
+              </Select>
             </div>
 
+            {/* TITLE */}
             <div className="space-y-2">
               <Label htmlFor="title">Title *</Label>
               <Input
                 id="title"
-                placeholder="Brief description of the incident"
+                placeholder="Short title of the incident"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
               />
             </div>
 
+            {/* LOCATION INPUT */}
             <div className="space-y-2">
-              <Label htmlFor="location">Location *</Label>
+              <Label htmlFor="location">Location (Text) *</Label>
               <Input
                 id="location"
-                placeholder="Street address or intersection"
+                placeholder="Street address or landmark"
                 value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, location: e.target.value })
+                }
+              />
+            </div>
+
+            {/* MAP PICKER */}
+            <div className="space-y-2">
+              <Label>Select Exact Location on Map (Optional)</Label>
+
+              <MapPicker
+                onSelectLocation={(coords) =>
+                  setFormData({ ...formData, coordinates: coords })
+                }
               />
             </div>
 
@@ -106,20 +129,24 @@ const ReportForm = ({ onClose, onSubmit }: ReportFormProps) => {
               <Label htmlFor="description">Description *</Label>
               <Textarea
                 id="description"
-                placeholder="Provide detailed information about what happened"
+                placeholder="Provide detailed information"
                 rows={4}
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
               />
             </div>
 
+            {/* Warning Box */}
             <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
               <AlertCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
               <p className="text-sm text-foreground">
-                For emergencies, please call 100 immediately. This form is for community awareness only.
+                For emergencies, call 911 immediately. This form is for community awareness only.
               </p>
             </div>
 
+            {/* BUTTONS */}
             <div className="flex gap-3 pt-2">
               <Button type="submit" className="flex-1">
                 Submit Report
